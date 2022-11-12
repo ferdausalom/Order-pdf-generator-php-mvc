@@ -1,0 +1,10 @@
+/* your styles go here */
+
+#message{
+    opacity: 1;
+    transition: opacity 1.5s ease-in-out;
+    -moz-transition: opacity 1.5s ease-in-out;
+    -webkit-transition: opacity 1.5s ease-in-out;
+    /* height: 56px;
+    transition: height 1s ease-out; */
+}
