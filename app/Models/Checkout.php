@@ -25,7 +25,7 @@ class Checkout
             "INSERT INTO %s (%s) VALUES (%s)",
             "addresses",
             implode(", ", array_keys($address)),
-            ":". implode(", :", array_keys($address))
+            ":" . implode(", :", array_keys($address))
         );
 
         $pdo = DBConnect();
@@ -44,49 +44,42 @@ class Checkout
         $stm->execute();
         $items = $stm->fetchAll(PDO::FETCH_OBJ);
 
-        
-        foreach($items as $item)
-        {
-            foreach($cartItemByClientIp as $cartItem)
-            {
+
+        foreach ($items as $item) {
+            foreach ($cartItemByClientIp as $cartItem) {
 
                 if ($item->product_id == $cartItem->product_id && $item->quantity == $cartItem->quantity) {
-                    
-                    return true;
-                    
-                }
 
+                    return true;
+                }
             }
         }
-
     }
 
     // Store order and return ID 
     public function processOrder($address_id, $cartItemByClientIp)
     {
-        foreach($cartItemByClientIp as $item)
-        {
+        foreach ($cartItemByClientIp as $item) {
             $data = [
                 'user_id' => $item->user_id,
                 'product_id' => $item->product_id,
                 'quantity' => $item->quantity,
-                'user_id' => $item->user_id,
                 'address_id' => $address_id
             ];
 
             $insert = sprintf(
                 "INSERT INTO %s (%s) VALUES (%s)",
                 "orders",
-                 implode(", ", array_keys($data)),
-                ":". implode(", :", array_keys($data))
-    
+                implode(", ", array_keys($data)),
+                ":" . implode(", :", array_keys($data))
+
             );
 
             $pdo = DBConnect();
             $stm =  $pdo->prepare($insert);
             $stm->execute($data);
             return $pdo->lastInsertId();
-        }        
+        }
     }
 
     // Store cash on delivery order 
@@ -94,7 +87,7 @@ class Checkout
     {
         $data = [
             "order_id" => $orderId,
-            "payment_id" => $clientIp."#".rand(),
+            "payment_id" => $clientIp . "#" . rand(),
             "payer_id" => $clientIp,
             "payer_email" => $email,
             "amount" => $amount,
@@ -106,17 +99,16 @@ class Checkout
             "INSERT INTO %s (%s) VALUES (%s)",
             "payments",
             implode(", ", array_keys($data)),
-            ":". implode(", :", array_keys($data))
+            ":" . implode(", :", array_keys($data))
         );
-        
-       try {
-        $stm = DBConnect()->prepare($insert);
-        $stm->execute($data);
-       } catch (\Throwable $th) {
 
-        die($th->getMessage());
-        
-       }
+        try {
+            $stm = DBConnect()->prepare($insert);
+            $stm->execute($data);
+        } catch (\Throwable $th) {
+
+            die($th->getMessage());
+        }
     }
 
     // Process paypal payment 
@@ -136,16 +128,12 @@ class Checkout
             if ($response->isRedirect()) {
                 $response->redirect();
             }
-
-
         } catch (\Throwable $th) {
             dd($th->getMessage());
         }
-
-
     }
 
-    private function setPaypalIdKey(Type $var = null)
+    private function setPaypalIdKey()
     {
         $gateway = Omnipay::create('PayPal_Rest');
 
@@ -162,8 +150,8 @@ class Checkout
         $gateway = $this->setPaypalIdKey();
 
         if (
-            array_key_exists('paymentId', $_GET) && 
-            array_key_exists('token', $_GET) && 
+            array_key_exists('paymentId', $_GET) &&
+            array_key_exists('token', $_GET) &&
             array_key_exists('PayerID', $_GET)
         ) {
 
@@ -190,14 +178,12 @@ class Checkout
                     "INSERT INTO %s (%s) VALUES (%s)",
                     "payments",
                     implode(", ", array_keys($processData)),
-                    ":".implode(", :", array_keys($processData))
+                    ":" . implode(", :", array_keys($processData))
                 );
 
                 $stm = DBConnect()->prepare($insert);
                 $stm->execute($processData);
-
-           }
-
+            }
         }
     }
 
@@ -226,14 +212,12 @@ class Checkout
     // Get addres for invoice 
     public function getAddress($session_id)
     {
-       $select = "SELECT ad.username, ad.phone, ad.city, ad.address
+        $select = "SELECT ad.username, ad.phone, ad.city, ad.address
          from addresses ad
-         where session_id =? LIMIT 1"
-        ;
+         where session_id =? LIMIT 1";
 
         $stm = DBConnect()->prepare($select);
         $stm->execute([$session_id]);
         return $stm->fetch(PDO::FETCH_OBJ);
     }
-  
 }
